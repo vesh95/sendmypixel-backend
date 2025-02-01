@@ -1,8 +1,8 @@
 package canvas
 
-type Row [size]*Column
-type Area [size]Row
-type SlicedArea [][]Column
+type Row [size]Column
+type Area [size]*Row
+type SlicedArea [][]*Column
 
 type PixelDto struct {
 	Y      int32  `json:"y"`
