@@ -1,49 +1,51 @@
 package canvas
 
-import "sync"
+import "regexp"
 
-type PixelDto struct {
-	Row   int    `json:"row"`
-	Col   int    `json:"col"`
-	Color string `json:"color"`
+const (
+	size = 10000
+)
+
+type Column struct {
+	Color  string
+	UserId int64
 }
 
-type Canvas [100][100]string
+func colorStringValidate(clr string) error {
+	ok, err := regexp.MatchString("#[0-9A-Fa-f]{6}", clr)
+	if err != nil {
+		return err
+	}
 
-type SyncCanvas struct {
-	canvas Canvas
-	mux    *sync.Mutex
+	if !ok {
+		return &ColorInvalid{color: clr}
+	}
+
+	return nil
 }
 
-func CreateNewState() SyncCanvas {
-	mux := &sync.Mutex{}
-	cnv := Canvas{}
-	for i := 0; i < 100; i++ {
-		for j := 0; j < 100; j++ {
-			cnv[i][j] = "white"
+func validateSize(x, y int32) error {
+	if x >= size || y >= size || x < 0 || y < 0 {
+		return &OutOfBounds{
+			x: x,
+			y: y,
 		}
 	}
 
-	return SyncCanvas{mux: mux, canvas: cnv}
+	return nil
 }
 
-func (s *SyncCanvas) SetPixel(dto PixelDto) (PixelDto, error) {
-	s.mux.Lock()
-	s.canvas[dto.Row][dto.Col] = dto.Color
-	s.mux.Unlock()
+func validateDto(dto PixelDto) error {
+	err := validateSize(dto.X, dto.Y)
 
-	return dto, nil
-}
-
-func (s *SyncCanvas) GetState() Canvas {
-	result := Canvas{}
-	s.mux.Lock()
-	for i, row := range s.canvas {
-		for j, col := range row {
-			result[i][j] = col
-		}
+	if err != nil {
+		return err
 	}
-	s.mux.Unlock()
 
-	return result
+	err = colorStringValidate(dto.Color)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
