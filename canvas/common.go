@@ -12,10 +12,7 @@ type Column struct {
 }
 
 func colorStringValidate(clr string) error {
-	ok, err := regexp.MatchString("#[0-9A-Fa-f]{6}", clr)
-	if err != nil {
-		return err
-	}
+	ok, _ := regexp.MatchString("#[0-9A-Fa-f]{6}", clr)
 
 	if !ok {
 		return &ColorInvalid{color: clr}
