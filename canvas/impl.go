@@ -62,18 +62,25 @@ func (s *SyncCanvas) SetPixel(dto PixelDto) (bool, error) {
 	return true, nil
 }
 
-func (s *SyncCanvas) GetFull() SlicedArea {
-	var result SlicedArea
-	for _, row := range s.canvas {
-		var columns []Column
-		for _, pixelMeta := range row {
-			columns = append(columns, Column{
-				Color:  pixelMeta.Color,
-				UserId: pixelMeta.UserId,
-			})
-		}
-		result = append(result, columns)
+func (s *SyncCanvas) GetFull() Area {
+	var result Area
+	wg := sync.WaitGroup{}
+	for y, _ := range s.canvas {
+		y := y
+		go func() {
+			wg.Add(1)
+			result[y] = &Row{}
+			for x, _ := range s.canvas[y] {
+				result[y][x] = Column{
+					Color:  s.canvas[y][x].Color,
+					UserId: s.canvas[y][x].UserId,
+				}
+			}
+			wg.Done()
+		}()
 	}
+
+	wg.Wait()
 
 	return result
 }
