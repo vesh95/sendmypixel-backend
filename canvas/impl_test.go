@@ -20,7 +20,7 @@ func TestSyncCanvas_SetPixel(t *testing.T) {
 			dto: PixelDto{
 				Y:      0,
 				X:      0,
-				Color:  "#FAFAFC",
+				Color:  "#FAFAFA",
 				UserId: 0,
 			},
 			err:   nil,
@@ -116,7 +116,7 @@ func TestSyncCanvas_SetPixel(t *testing.T) {
 func TestSyncCanvas_GetPixel(t *testing.T) {
 	fixture := NewSyncCanvas()
 	fixture.canvas[0][0] = Column{
-		Color:  "#FAFAFC",
+		Color:  "#FAFAFA",
 		UserId: 1,
 	}
 
