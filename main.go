@@ -2,12 +2,8 @@ package main
 
 import (
 	"backend/canvas"
-	"encoding/json"
-	"errors"
 	"flag"
-	"fmt"
 	"github.com/gorilla/websocket"
-	"log"
 	"net/http"
 	"sync"
 )
@@ -20,72 +16,86 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 } // use default options
 
-var state = canvas.CreateNewState()
+var State = canvas.NewSyncCanvas()
 
 func main() {
-	flag.Parse()
-	log.SetFlags(0)
-	http.HandleFunc("/updates", connectionHandler)
-	http.HandleFunc("/set", setPixel)
-	http.HandleFunc("/state", getState)
-	log.Fatal(http.ListenAndServe(*addr, nil))
+	//mux := http.NewServeMux()
+	//flag.Parse()
+	//log.SetFlags(0)
+	//mux.HandleFunc("/updates", connectionHandler)
+	//mux.HandleFunc("/set", setPixel)
+	//mux.HandleFunc("/state", getState)
+	//handler := cors.Default().Handler(mux)
+	//
+	//log.Fatal(http.ListenAndServe(*addr, handler))
 }
 
-func getState(w http.ResponseWriter, _ *http.Request) {
-	err := json.NewEncoder(w).Encode(state.GetState())
-	if err != nil {
-		w.WriteHeader(500)
-		log.Println(err)
-	}
-
-	return
-}
-
-func setPixel(w http.ResponseWriter, r *http.Request) {
-	pixelData := canvas.PixelDto{}
-	err := json.NewDecoder(r.Body).Decode(&pixelData)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	pixel, err := state.SetPixel(pixelData)
-	if err != nil {
-		_, _ = fmt.Fprint(w, err)
-		return
-	}
-	broadcastUpdate(pixel)
-}
-
-func broadcastUpdate(pixel canvas.PixelDto) {
-	connectionsMap.Range(func(key, value any) bool {
-		conn := key.(*websocket.Conn)
-		_ = conn.WriteJSON(pixel)
-
-		return true
-	})
-
-	return
-}
-
-func connectionHandler(w http.ResponseWriter, r *http.Request) {
-	c, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		fmt.Println("Upgrade connection error:", err)
-		return
-	}
-	defer c.Close()
-
-	connectionsMap.Store(c, true)
-
-	for {
-		fmt.Println(connectionsMap)
-		_, _, err := c.ReadMessage()
-		if errors.Is(err, websocket.ErrCloseSent) {
-			connectionsMap.Delete(c)
-			break
-		} else if err != nil {
-			fmt.Println("Read message error:", err)
-			break
-		}
-	}
-}
+//func getState(w http.ResponseWriter, _ *http.Request) {
+//	err := json.NewEncoder(w).Encode(State.GetFull())
+//	w.Header().Set("Content-Type", "application/json")
+//	if err != nil {
+//		w.WriteHeader(500)
+//		log.Println(err)
+//	}
+//
+//	return
+//}
+//
+//// setPixel
+//func setPixel(w http.ResponseWriter, r *http.Request) {
+//	pixelData := canvas.PixelDto{}
+//	err := json.NewDecoder(r.Body).Decode(&pixelData)
+//	if err != nil {
+//		slog.Error("Decode error: %s", err)
+//		w.WriteHeader(http.StatusBadRequest)
+//		return
+//	}
+//	_, err = State.SetPixel(pixelData)
+//	slog.Info("Pixel", pixelData)
+//	if err != nil {
+//		slog.Error("pixel", err)
+//		w.WriteHeader(http.StatusBadRequest)
+//		_, _ = fmt.Fprint(w, err)
+//		return
+//	}
+//	_, err = broadcastUpdate(pixelData)
+//	if err != nil {
+//		slog.Error("Not send update pixel")
+//	}
+//
+//	w.WriteHeader(http.StatusOK)
+//	slog.Info("Pixel send")
+//}
+//
+//func broadcastUpdate(pixel canvas.PixelDto) (bool, error) {
+//	var err error
+//	connectionsMap.Range(func(key, value any) bool {
+//		conn := key.(*websocket.Conn)
+//		_ = conn.WriteJSON(pixel)
+//
+//		return true
+//	})
+//
+//	return err != nil, err
+//}
+//
+//func connectionHandler(w http.ResponseWriter, r *http.Request) {
+//	slog.Info("Connected")
+//	c, err := upgrader.Upgrade(w, r, nil)
+//	if err != nil {
+//		fmt.Println("Upgrade connection error:", err)
+//		return
+//	}
+//	defer c.Close()
+//
+//	connectionsMap.Store(c, true)
+//
+//	for {
+//		_, _, err := c.ReadMessage()
+//		if err != nil {
+//			connectionsMap.Delete(c)
+//			slog.Info("Disconnect: ", err)
+//			break
+//		}
+//	}
+//}
