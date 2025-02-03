@@ -12,7 +12,7 @@ jobs:
           go-version: '1.23.2'
 
       - name: Build test
-        run: test -c -o out/backend_canvas.test backend/canvas
+        run: go test -c -o out/backend_canvas.test backend/canvas
 
       - name: Run Test
         run: ./out/backend_canvas.test
