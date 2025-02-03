@@ -20,7 +20,7 @@ func TestSyncCanvas_SetPixel(t *testing.T) {
 			dto: PixelDto{
 				Y:      0,
 				X:      0,
-				Color:  "#FAFAFA",
+				Color:  "#FAFAFC",
 				UserId: 0,
 			},
 			err:   nil,
