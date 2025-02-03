@@ -116,7 +116,7 @@ func TestSyncCanvas_SetPixel(t *testing.T) {
 func TestSyncCanvas_GetPixel(t *testing.T) {
 	fixture := NewSyncCanvas()
 	fixture.canvas[0][0] = Column{
-		Color:  "#FAFAFA",
+		Color:  "#FAFAFC",
 		UserId: 1,
 	}
 
