@@ -13,11 +13,11 @@ type SyncCanvas struct {
 func NewSyncCanvas() *SyncCanvas {
 	wg := sync.WaitGroup{}
 	canvas := Area{}
-	for y, _ := range canvas {
+	for y := range canvas {
+		wg.Add(1)
 		go func(area *Area, y int) {
-			wg.Add(1)
 			canvas[y] = &Row{}
-			for x, _ := range canvas[y] {
+			for x := range canvas[y] {
 				canvas[y][x] = Column{
 					Color:  "#000000",
 					UserId: 0,
@@ -55,7 +55,7 @@ func (s *SyncCanvas) SetPixel(dto PixelDto) (bool, error) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 
-	meta := s.canvas[dto.Y][dto.X]
+	meta := &s.canvas[dto.Y][dto.X]
 	meta.UserId = dto.UserId
 	meta.Color = dto.Color
 
@@ -65,12 +65,12 @@ func (s *SyncCanvas) SetPixel(dto PixelDto) (bool, error) {
 func (s *SyncCanvas) GetFull() Area {
 	var result Area
 	wg := sync.WaitGroup{}
-	for y, _ := range s.canvas {
+	for y := range s.canvas {
 		y := y
+		wg.Add(1)
 		go func() {
-			wg.Add(1)
 			result[y] = &Row{}
-			for x, _ := range s.canvas[y] {
+			for x := range s.canvas[y] {
 				result[y][x] = Column{
 					Color:  s.canvas[y][x].Color,
 					UserId: s.canvas[y][x].UserId,

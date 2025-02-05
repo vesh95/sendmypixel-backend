@@ -107,8 +107,6 @@ func TestSyncCanvas_SetPixel(t *testing.T) {
 			if c.exptd != ok {
 				t.Errorf("%v was expected, %v was received.", c.exptd, ok)
 			}
-
-			return
 		})
 	}
 }
