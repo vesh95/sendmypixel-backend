@@ -11,8 +11,8 @@ jobs:
         with:
           go-version: '1.23.2'
 
-      - name: Build test
-        run: go test -c -o out/backend_canvas.test backend/canvas
+      - name: Run canvas test
+        run: go test backend/internal/canvas
 
-      - name: Run Test
-        run: ./out/backend_canvas.test
+      - name: Run telegram_initdata_authentication test
+        run: go test internal/authentication/telegram_init_data
