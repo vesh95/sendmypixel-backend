@@ -15,4 +15,4 @@ jobs:
         run: go test backend/internal/canvas
 
       - name: Run telegram_initdata_authentication test
-        run: go test internal/authentication/telegram_init_data
+        run: go test backend/internal/authentication/telegram_init_data
