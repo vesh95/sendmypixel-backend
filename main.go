@@ -1,7 +1,7 @@
 package main
 
 import (
-	"backend/canvas"
+	"backend/internal/canvas"
 	"flag"
 	"github.com/gorilla/websocket"
 	"net/http"

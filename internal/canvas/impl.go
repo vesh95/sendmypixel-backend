@@ -16,6 +16,7 @@ func NewSyncCanvas() *SyncCanvas {
 	for y := range canvas {
 		wg.Add(1)
 		go func(area *Area, y int) {
+			defer wg.Done()
 			canvas[y] = &Row{}
 			for x := range canvas[y] {
 				canvas[y][x] = Column{
@@ -23,7 +24,6 @@ func NewSyncCanvas() *SyncCanvas {
 					UserId: 0,
 				}
 			}
-			wg.Done()
 		}(&canvas, y)
 	}
 
@@ -69,6 +69,7 @@ func (s *SyncCanvas) GetFull() Area {
 		y := y
 		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			result[y] = &Row{}
 			for x := range s.canvas[y] {
 				result[y][x] = Column{
@@ -76,7 +77,6 @@ func (s *SyncCanvas) GetFull() Area {
 					UserId: s.canvas[y][x].UserId,
 				}
 			}
-			wg.Done()
 		}()
 	}
 
