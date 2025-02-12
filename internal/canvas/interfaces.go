@@ -11,11 +11,9 @@ type PixelDto struct {
 	UserId int64  `json:"user_id"`
 }
 
-// Canvas
-// TODO segregate interface
 type Canvas interface {
 	GetPixel(x, y int32) (PixelDto, error)
 	SetPixel(dto PixelDto) (bool, error)
-	GetFull() SlicedArea
+	GetFull() Area
 	GetArea(xLeft, yTop, xBottom, yBottom int32) (SlicedArea, error)
 }
