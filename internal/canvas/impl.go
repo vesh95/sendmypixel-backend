@@ -86,7 +86,6 @@ func (s *SyncCanvas) GetFull() Area {
 }
 
 func (s *SyncCanvas) GetArea(xLeft, yTop, xRight, yBottom int32) (SlicedArea, error) {
-
 	err := validateSize(xLeft, yTop)
 	if err != nil {
 		return SlicedArea{}, err
@@ -94,7 +93,7 @@ func (s *SyncCanvas) GetArea(xLeft, yTop, xRight, yBottom int32) (SlicedArea, er
 
 	err = validateSize(xRight, yBottom)
 	if err != nil {
-		return SlicedArea{}, nil
+		return SlicedArea{}, err
 	}
 
 	var result SlicedArea = make(SlicedArea, yBottom-yTop)

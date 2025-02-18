@@ -299,7 +299,7 @@ func TestSyncCanvas_GetArea(t *testing.T) {
 
 	cases := []areaTestCase{
 		{
-			name:        "Get succefully",
+			name:        "Get successfully",
 			x1:          0,
 			x2:          4,
 			y1:          0,
@@ -307,14 +307,40 @@ func TestSyncCanvas_GetArea(t *testing.T) {
 			err:         nil,
 			trsPtsMatch: true,
 		},
-
 		{
-			name:        "Get out of range",
+			name:        "Get out of range x1",
+			x1:          size + 1,
+			x2:          4,
+			y1:          0,
+			y2:          4,
+			err:         &OutOfBounds{x: size + 1, y: 0},
+			trsPtsMatch: false,
+		},
+		{
+			name:        "Get out of range x2",
 			x1:          0,
 			x2:          size + 1,
 			y1:          0,
 			y2:          4,
-			err:         OutOfBounds{x: size, y: 4},
+			err:         &OutOfBounds{x: size + 1, y: 4},
+			trsPtsMatch: false,
+		},
+		{
+			name:        "Get out of range y1",
+			x1:          0,
+			x2:          4,
+			y1:          size + 1,
+			y2:          4,
+			err:         &OutOfBounds{x: 0, y: size + 1},
+			trsPtsMatch: false,
+		},
+		{
+			name:        "Get out of range x2",
+			x1:          0,
+			x2:          4,
+			y1:          0,
+			y2:          size + 1,
+			err:         &OutOfBounds{x: 4, y: size + 1},
 			trsPtsMatch: false,
 		},
 	}
@@ -322,18 +348,19 @@ func TestSyncCanvas_GetArea(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			area, err := fixture.GetArea(c.x1, c.y1, c.x2, c.y2)
-			t.Log(err)
-			if !errors.Is(err, c.err) {
-				t.Errorf("Exceped %s, recieved %s", c.err, err)
-				return
-			}
 
-			if len(area) != int(c.y2-c.y1) {
-				t.Errorf("Unexcepted area rows count %d. Excepted: %d", len(area), int(c.y2-c.y1))
-			}
+			if err != nil {
+				if err.Error() != c.err.Error() {
+					t.Errorf("Exceped: %s, got: %s", err, c.err)
+				}
+			} else {
+				if len(area) != int(c.y2-c.y1) {
+					t.Errorf("Unexcepted area rows count %d. Excepted: %d", len(area), int(c.y2-c.y1))
+				}
 
-			if c.trsPtsMatch == checkTracePoints(area) {
-				t.Error("TracePoints not consist")
+				if c.trsPtsMatch == checkTracePoints(area) {
+					t.Error("TracePoints not consist")
+				}
 			}
 		})
 	}
