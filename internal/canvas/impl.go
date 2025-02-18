@@ -86,23 +86,26 @@ func (s *SyncCanvas) GetFull() Area {
 }
 
 func (s *SyncCanvas) GetArea(xLeft, yTop, xRight, yBottom int32) (SlicedArea, error) {
-	panic("implements me")
-	//err := validateSize(xLeft, yTop)
-	//if err != nil {
-	//	return SlicedArea{}, err
-	//}
-	//err = validateSize(xRight, yBottom)
-	//if err != nil {
-	//	return SlicedArea{}, nil
-	//}
-	//
-	//var result SlicedArea
-	//for _, row := range s.canvas[yTop:yBottom] {
-	//	var columns := make([]Column)
-	//	for _, column := range row {
-	//		copy(columns, row)
-	//	}
-	//	result = append(result, make([]Column, len(row)))
-	//}
-	return SlicedArea{}, nil
+	err := validateSize(xLeft, yTop)
+	if err != nil {
+		return SlicedArea{}, err
+	}
+
+	err = validateSize(xRight, yBottom)
+	if err != nil {
+		return SlicedArea{}, err
+	}
+
+	var result SlicedArea = make(SlicedArea, yBottom-yTop)
+	for y, row := range s.canvas[yTop:yBottom] {
+		result[y] = make([]Column, xRight-xLeft)
+		for x, column := range row[xLeft:xRight] {
+			result[y][x] = Column{
+				Color:  column.Color,
+				UserId: column.UserId,
+			}
+		}
+	}
+
+	return result, nil
 }

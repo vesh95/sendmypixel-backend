@@ -3,7 +3,7 @@ package canvas
 import "regexp"
 
 const (
-	size = 10000
+	size = 5000
 )
 
 type Column struct {
