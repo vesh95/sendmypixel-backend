@@ -7,28 +7,30 @@ import (
 )
 
 type TokenBucket struct {
-	capacity int
-	tokens   int
-	mutex    sync.Mutex
+	capacity       int
+	tokens         int
+	refillDuration time.Duration
+	mutex          sync.Mutex
 }
 
 // NewTokenBucket - конструктор мидлвара, который создаёт структуру TokenBucket.
 // capacity определяет кол-во токенов в бакете, а initialTokens сколько их будет изначально.
-func NewTokenBucket(capacity, initialTokens int) *TokenBucket {
+// duration определяет через какой промежуток времени обновляется токен
+func NewTokenBucket(capacity, initialTokens int, duration time.Duration) *TokenBucket {
 	tb := &TokenBucket{
-		capacity: capacity,
-		tokens:   initialTokens,
+		capacity:       capacity,
+		tokens:         initialTokens,
+		refillDuration: duration,
 	}
-	tb.startTokenRefill()
 
 	return tb
 }
 
-// startTokenRefill запускает периодическое восстановление токенов в бакете.
-func (tb *TokenBucket) startTokenRefill() {
+// StartTokenRefill запускает периодическое восстановление токенов в бакете.
+func (tb *TokenBucket) StartTokenRefill() {
 	go func() {
 		for {
-			time.Sleep(time.Second)
+			time.Sleep(tb.refillDuration)
 			tb.mutex.Lock()
 			if tb.tokens < tb.capacity {
 				tb.tokens++
@@ -38,23 +40,22 @@ func (tb *TokenBucket) startTokenRefill() {
 	}()
 }
 
-// consumeToken задействует токен из бакета.
-func (tb *TokenBucket) consumeToken() {
+// Take задействует токен из бакета.
+func (tb *TokenBucket) Take() bool {
 	tb.mutex.Lock()
-	for tb.tokens == 0 {
-		tb.mutex.Unlock()
-		time.Sleep(time.Millisecond * 100) // Настройка времени ожидания
-		tb.mutex.Lock()
+	defer tb.mutex.Unlock()
+	if tb.tokens == 0 {
+		return false
 	}
 	tb.tokens--
-	tb.mutex.Unlock()
+
+	return true
 }
 
 // RateLimitMiddleware это промежуточная функция обработчика http запросов для получения токена при выполнении запроса.
 func (tb *TokenBucket) RateLimitMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tb.consumeToken()
-		if tb.tokens == 0 {
+		if !tb.Take() {
 			http.Error(w, "Token bucket limit reached", http.StatusTooManyRequests)
 			return
 		}
