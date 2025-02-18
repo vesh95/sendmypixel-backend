@@ -1,7 +1,7 @@
 name: Tests
 on: [push]
 jobs:
-  Test-Canvas-Package:
+  Tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
