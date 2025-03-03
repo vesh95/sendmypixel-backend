@@ -1,7 +1,9 @@
-package canvas
+package sync_canvas
 
 import (
+	"backend/pkg/canvas"
 	"errors"
+	"log"
 	"strings"
 	"testing"
 )
@@ -11,13 +13,13 @@ func TestSyncCanvas_SetPixel(t *testing.T) {
 
 	cases := []struct {
 		name  string
-		dto   PixelDto
+		dto   canvas.PixelDto
 		err   error
 		exptd bool
 	}{
 		{
 			name: "Successfully set",
-			dto: PixelDto{
+			dto: canvas.PixelDto{
 				Y:      0,
 				X:      0,
 				Color:  "#FAFAFA",
@@ -28,62 +30,62 @@ func TestSyncCanvas_SetPixel(t *testing.T) {
 		},
 		{
 			name: "Set out of bound pixel by Y",
-			dto: PixelDto{
-				Y:      size,
+			dto: canvas.PixelDto{
+				Y:      canvas.Size,
 				X:      0,
 				Color:  "#F0F0F0",
 				UserId: 0,
 			},
-			err:   OutOfBounds{x: 0, y: size},
+			err:   canvas.ErrorOutOfBounds,
 			exptd: false,
 		},
 		{
 			name: "Set out of bound pixel by X",
-			dto: PixelDto{
+			dto: canvas.PixelDto{
 				Y:      0,
-				X:      size,
+				X:      canvas.Size,
 				Color:  "#F0F0F0",
 				UserId: 0,
 			},
-			err:   OutOfBounds{x: size, y: 0},
+			err:   canvas.ErrorOutOfBounds,
 			exptd: false,
 		},
 		{
 			name: "Set out of bound pixel by Y with under 0 value",
-			dto: PixelDto{
+			dto: canvas.PixelDto{
 				Y:      -1,
 				X:      0,
 				Color:  "#F0F0F0",
 				UserId: 0,
 			},
-			err:   OutOfBounds{x: 0, y: -1},
+			err:   canvas.ErrorOutOfBounds,
 			exptd: false,
 		},
 		{
 			name: "Set out of bound pixel by X with under 0 value",
-			dto: PixelDto{
+			dto: canvas.PixelDto{
 				Y:      0,
 				X:      -1,
 				Color:  "#F0F0F0",
 				UserId: 0,
 			},
-			err:   OutOfBounds{x: -1, y: 0},
+			err:   canvas.ErrorOutOfBounds,
 			exptd: false,
 		},
 		{
 			name: "Set invalid color",
-			dto: PixelDto{
+			dto: canvas.PixelDto{
 				Y:      0,
 				X:      0,
 				Color:  "yellow",
 				UserId: 0,
 			},
-			err:   ColorInvalid{color: "yellow"},
+			err:   canvas.ErrorColorInvalid,
 			exptd: false,
 		},
 		{
 			name: "Successfully reset",
-			dto: PixelDto{
+			dto: canvas.PixelDto{
 				Y:      0,
 				X:      0,
 				Color:  "#FAFAF3",
@@ -97,8 +99,7 @@ func TestSyncCanvas_SetPixel(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ok, err := fixture.SetPixel(c.dto)
-
-			if c.err != nil && errors.Is(err, c.err) {
+			if c.err != nil && !errors.Is(c.err, err) {
 				t.Errorf("Error check: %v was excepted, %v was received", c.err.Error(), err.Error())
 			} else if c.err == nil && err != nil {
 				t.Fatalf("Unexcepted error: %T", err)
@@ -113,7 +114,7 @@ func TestSyncCanvas_SetPixel(t *testing.T) {
 
 func TestSyncCanvas_GetPixel(t *testing.T) {
 	fixture := NewSyncCanvas()
-	fixture.canvas[0][0] = Column{
+	fixture.canvas[0][0] = canvas.Column{
 		Color:  "#FAFAFA",
 		UserId: 1,
 	}
@@ -124,13 +125,13 @@ func TestSyncCanvas_GetPixel(t *testing.T) {
 			X, Y int32
 		}
 		err    error
-		expctd PixelDto
+		expctd canvas.PixelDto
 	}{
 		{
 			name: "Successfully getting pixel",
 			args: struct{ X, Y int32 }{X: 0, Y: 0},
 			err:  nil,
-			expctd: PixelDto{
+			expctd: canvas.PixelDto{
 				Y:      0,
 				X:      0,
 				Color:  "#FAFAFA",
@@ -141,7 +142,7 @@ func TestSyncCanvas_GetPixel(t *testing.T) {
 			name: "Successfully getting uninitialized pixel",
 			args: struct{ X, Y int32 }{X: 1, Y: 0},
 			err:  nil,
-			expctd: PixelDto{
+			expctd: canvas.PixelDto{
 				Y:      0,
 				X:      1,
 				Color:  "#000000",
@@ -150,9 +151,9 @@ func TestSyncCanvas_GetPixel(t *testing.T) {
 		},
 		{
 			name: "Out of bounds X",
-			args: struct{ X, Y int32 }{X: size, Y: 0},
-			err:  OutOfBounds{size, 0},
-			expctd: PixelDto{
+			args: struct{ X, Y int32 }{X: canvas.Size, Y: 0},
+			err:  canvas.ErrorOutOfBounds,
+			expctd: canvas.PixelDto{
 				Y:      0,
 				X:      0,
 				Color:  "",
@@ -161,9 +162,9 @@ func TestSyncCanvas_GetPixel(t *testing.T) {
 		},
 		{
 			name: "Out of bounds Y",
-			args: struct{ X, Y int32 }{X: 0, Y: size},
-			err:  OutOfBounds{0, size},
-			expctd: PixelDto{
+			args: struct{ X, Y int32 }{X: 0, Y: canvas.Size},
+			err:  canvas.ErrorOutOfBounds,
+			expctd: canvas.PixelDto{
 				Y:      0,
 				X:      0,
 				Color:  "",
@@ -173,8 +174,8 @@ func TestSyncCanvas_GetPixel(t *testing.T) {
 		{
 			name: "Out of bounds X with under 0 value",
 			args: struct{ X, Y int32 }{X: -1, Y: 0},
-			err:  OutOfBounds{-1, 0},
-			expctd: PixelDto{
+			err:  canvas.ErrorOutOfBounds,
+			expctd: canvas.PixelDto{
 				Y:      0,
 				X:      0,
 				Color:  "",
@@ -184,8 +185,8 @@ func TestSyncCanvas_GetPixel(t *testing.T) {
 		{
 			name: "Out of bounds Y with under 0 value",
 			args: struct{ X, Y int32 }{X: 0, Y: -1},
-			err:  OutOfBounds{0, -1},
-			expctd: PixelDto{
+			err:  canvas.ErrorOutOfBounds,
+			expctd: canvas.PixelDto{
 				Y:      0,
 				X:      0,
 				Color:  "",
@@ -198,7 +199,7 @@ func TestSyncCanvas_GetPixel(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			pixel, err := fixture.GetPixel(c.args.X, c.args.Y)
 
-			if c.err != nil && errors.Is(err, c.err) {
+			if c.err != nil && !errors.Is(err, c.err) {
 				t.Errorf("Error check: %v was excepted, %v was received", c.err.Error(), err.Error())
 			} else if c.err == nil && err != nil {
 				t.Fatalf("Unexcepted error: %T", err)
@@ -213,12 +214,12 @@ func TestSyncCanvas_GetPixel(t *testing.T) {
 
 type expectedColumnsList []struct {
 	x, y      int32
-	expctdCol *Column
+	expctdCol *canvas.Column
 }
 
 func TestSyncCanvas_GetFull(t *testing.T) {
 	fixture := NewSyncCanvas()
-	fixture.canvas[0][0] = Column{
+	fixture.canvas[0][0] = canvas.Column{
 		Color:  "#FAFAFA",
 		UserId: 1,
 	}
@@ -233,7 +234,7 @@ func TestSyncCanvas_GetFull(t *testing.T) {
 				{
 					x: 0,
 					y: 0,
-					expctdCol: &Column{
+					expctdCol: &canvas.Column{
 						Color:  "#FAFAFA",
 						UserId: 1,
 					},
@@ -241,7 +242,7 @@ func TestSyncCanvas_GetFull(t *testing.T) {
 				{
 					x: 1,
 					y: 1,
-					expctdCol: &Column{
+					expctdCol: &canvas.Column{
 						Color:  "#000000",
 						UserId: 0,
 					},
@@ -280,19 +281,19 @@ var tracePointColor string = "#FAFAFA"
 func TestSyncCanvas_GetArea(t *testing.T) {
 
 	fixture := NewSyncCanvas()
-	fixture.canvas[0][0] = Column{
+	fixture.canvas[0][0] = canvas.Column{
 		Color:  tracePointColor,
 		UserId: 1,
 	}
-	fixture.canvas[4][4] = Column{
+	fixture.canvas[4][4] = canvas.Column{
 		Color:  tracePointColor,
 		UserId: 1,
 	}
-	fixture.canvas[0][4] = Column{
+	fixture.canvas[0][4] = canvas.Column{
 		Color:  tracePointColor,
 		UserId: 1,
 	}
-	fixture.canvas[4][0] = Column{
+	fixture.canvas[4][0] = canvas.Column{
 		Color:  tracePointColor,
 		UserId: 1,
 	}
@@ -309,29 +310,29 @@ func TestSyncCanvas_GetArea(t *testing.T) {
 		},
 		{
 			name:        "Get out of range x1",
-			x1:          size + 1,
+			x1:          canvas.Size + 1,
 			x2:          4,
 			y1:          0,
 			y2:          4,
-			err:         &OutOfBounds{x: size + 1, y: 0},
+			err:         canvas.ErrorOutOfBounds,
 			trsPtsMatch: false,
 		},
 		{
 			name:        "Get out of range x2",
 			x1:          0,
-			x2:          size + 1,
+			x2:          canvas.Size + 1,
 			y1:          0,
 			y2:          4,
-			err:         &OutOfBounds{x: size + 1, y: 4},
+			err:         canvas.ErrorOutOfBounds,
 			trsPtsMatch: false,
 		},
 		{
 			name:        "Get out of range y1",
 			x1:          0,
 			x2:          4,
-			y1:          size + 1,
+			y1:          canvas.Size + 1,
 			y2:          4,
-			err:         &OutOfBounds{x: 0, y: size + 1},
+			err:         canvas.ErrorOutOfBounds,
 			trsPtsMatch: false,
 		},
 		{
@@ -339,8 +340,8 @@ func TestSyncCanvas_GetArea(t *testing.T) {
 			x1:          0,
 			x2:          4,
 			y1:          0,
-			y2:          size + 1,
-			err:         &OutOfBounds{x: 4, y: size + 1},
+			y2:          canvas.Size + 1,
+			err:         canvas.ErrorOutOfBounds,
 			trsPtsMatch: false,
 		},
 	}
@@ -350,7 +351,8 @@ func TestSyncCanvas_GetArea(t *testing.T) {
 			area, err := fixture.GetArea(c.x1, c.y1, c.x2, c.y2)
 
 			if err != nil {
-				if err.Error() != c.err.Error() {
+				log.Printf("%T\n", err)
+				if !errors.Is(c.err, err) {
 					t.Errorf("Exceped: %s, got: %s", err, c.err)
 				}
 			} else {
@@ -366,7 +368,7 @@ func TestSyncCanvas_GetArea(t *testing.T) {
 	}
 }
 
-func checkTracePoints(area SlicedArea) bool {
+func checkTracePoints(area canvas.SlicedArea) bool {
 	rows := len(area) - 1
 	cols := len(area[0]) - 1
 	return area[0][0].Color == tracePointColor &&
@@ -375,7 +377,7 @@ func checkTracePoints(area SlicedArea) bool {
 		area[rows][cols].Color == tracePointColor
 }
 
-func comparePixelDto(value PixelDto, exceptedValue PixelDto) bool {
+func comparePixelDto(value canvas.PixelDto, exceptedValue canvas.PixelDto) bool {
 	return value.Y == exceptedValue.Y &&
 		value.X == exceptedValue.X &&
 		strings.Compare(value.Color, exceptedValue.Color) == 0 &&

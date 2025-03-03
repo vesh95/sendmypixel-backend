@@ -1,7 +1,7 @@
 package canvas
 
-type Row [size]Column
-type Area [size]*Row
+type Row [Size]Column
+type Area [Size]*Row
 type SlicedArea [][]Column
 
 type PixelDto struct {
