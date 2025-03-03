@@ -1,4 +1,4 @@
-package api
+package ratelimit
 
 import (
 	"net/http"

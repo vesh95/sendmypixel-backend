@@ -1,7 +1,7 @@
 package ratelimit
 
 import (
-	"backend/internal/api"
+	"backend/pkg/handlers/ratelimit"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -10,7 +10,7 @@ import (
 )
 
 func TestRateLimitMiddlewareWithOnceRequest(t *testing.T) {
-	tb := api.NewTokenBucket(1, 1, 1*time.Second)
+	tb := ratelimit.NewTokenBucket(1, 1, 1*time.Second)
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, "Hello, World!") })
 	middleware := tb.RateLimitMiddleware(handler)
@@ -30,7 +30,7 @@ func TestRateLimitMiddlewareWithOnceRequest(t *testing.T) {
 
 func TestRateLimitMiddlewareWith(t *testing.T) {
 	// Инициализация ведра токенов с емкостью 1 и начальным количеством токенов 1
-	tb := api.NewTokenBucket(1, 1, 1*time.Second)
+	tb := ratelimit.NewTokenBucket(1, 1, 1*time.Second)
 
 	// Создание обработчика для тестирования
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +61,7 @@ func TestRateLimitMiddlewareWith(t *testing.T) {
 
 func TestRateLimitMiddlewareWithRefill(t *testing.T) {
 	// Инициализация ведра токенов с емкостью 1 и начальным количеством токенов 1
-	tb := api.NewTokenBucket(1, 1, 1*time.Second)
+	tb := ratelimit.NewTokenBucket(1, 1, 1*time.Second)
 	tb.StartTokenRefill()
 
 	// Создание обработчика для тестирования

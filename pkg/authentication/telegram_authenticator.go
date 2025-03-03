@@ -1,7 +1,6 @@
-package telegram_init_data
+package authentication
 
 import (
-	"backend/http/authentication"
 	initdata "github.com/telegram-mini-apps/init-data-golang"
 )
 
@@ -17,21 +16,25 @@ func NewTelegramMiniAppAuthenticator(secret string, authStorage TelegramAuthenti
 	}
 }
 
-func (t *TelegramMiniApp) Authenticate(token string) (authentication.User, error) {
+func (t *TelegramMiniApp) Authenticate(token string) (User, error) {
 	parsedInitData, err := initdata.Parse(token)
 	if err != nil {
-		return authentication.User{}, authentication.DataInvalidError
+		return User{}, DataInvalidError
 	}
 
 	err = initdata.Validate(token, t.secret, 0)
 	if err != nil {
-		return authentication.User{}, authentication.InvalidSignatureError
+		return User{}, InvalidSignatureError
 	}
 
 	user, err := t.authStorage.Upsert(parsedInitData.User)
 	if err != nil {
-		return authentication.User{}, err
+		return User{}, err
 	}
 
 	return user, nil
+}
+
+type TelegramAuthenticationStorage interface {
+	Upsert(user initdata.User) (User, error)
 }
