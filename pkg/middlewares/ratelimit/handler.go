@@ -52,8 +52,8 @@ func (tb *TokenBucket) Take() bool {
 	return true
 }
 
-// RateLimitMiddleware это промежуточная функция обработчика http запросов для получения токена при выполнении запроса.
-func (tb *TokenBucket) RateLimitMiddleware(next http.Handler) http.Handler {
+// Chain это промежуточная функция обработчика http запросов для получения токена при выполнении запроса.
+func (tb *TokenBucket) Chain(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !tb.Take() {
 			http.Error(w, "Token bucket limit reached", http.StatusTooManyRequests)

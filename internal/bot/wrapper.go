@@ -5,7 +5,6 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers"
-	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers/filters/callbackquery"
 	"log"
 	"log/slog"
 	"time"
@@ -30,7 +29,9 @@ func NewBotWrapper(token string, logger *slog.Logger) *Wrapper {
 		panic("failed to create new client instance: " + err.Error())
 	}
 
-	w := &Wrapper{}
+	w := &Wrapper{
+		logger: logger,
+	}
 
 	err = w.creteUpdater(b)
 	if err != nil {
@@ -68,7 +69,7 @@ func (w *Wrapper) creteUpdater(b *gotgbot.Bot) error {
 
 	w.pollUpdater = updater
 
-	w.logger.Info(fmt.Sprintf("%s has been started...\n", b.User.Username))
+	w.logger.Info("bot has been started", slog.Group("telegram bot", "username", b.User.Username))
 
 	return nil
 }
@@ -82,16 +83,14 @@ func (w *Wrapper) createDispatcher() *ext.Dispatcher {
 		MaxRoutines: ext.DefaultMaxRoutines,
 	})
 
-	dispatcher.AddHandler(handlers.NewCommand(CommandStart, start))
-	dispatcher.AddHandler(handlers.NewCommand(CommandPlay, play))
-	dispatcher.AddHandler(handlers.NewCallback(callbackquery.Equal("play"), play))
-	dispatcher.AddHandler(handlers.NewCallback(callbackquery.Equal("game=takemypixel"), play))
+	dispatcher.AddHandler(handlers.NewCommand(CommandStart, w.start))
 
 	return dispatcher
 }
 
-func play(b *gotgbot.Bot, ctx *ext.Context) error {
+func (w *Wrapper) play(b *gotgbot.Bot, ctx *ext.Context) error {
 	_, err := b.SendGame(ctx.EffectiveChat.Id, "takemypixel", nil)
+	w.logger.Debug("Play pressed")
 	if err != nil {
 		return fmt.Errorf("failed to send game: %w", err)
 	}
@@ -99,19 +98,9 @@ func play(b *gotgbot.Bot, ctx *ext.Context) error {
 	return nil
 }
 
-func start(b *gotgbot.Bot, ctx *ext.Context) error {
+func (w *Wrapper) start(b *gotgbot.Bot, ctx *ext.Context) error {
 	log.Println("Start", ctx.EffectiveMessage.GetSender().Username())
-	_, err := ctx.EffectiveMessage.Reply(b, fmt.Sprintf("Hello! I'm @%s. Lets play!", b.User.Username), &gotgbot.SendMessageOpts{
-		ParseMode: "html",
-		ReplyMarkup: gotgbot.InlineKeyboardMarkup{
-			InlineKeyboard: [][]gotgbot.InlineKeyboardButton{{
-				{
-					Text:         "play",
-					CallbackData: "play",
-				},
-			}},
-		},
-	})
+	_, err := ctx.EffectiveMessage.Reply(b, fmt.Sprintf("Hello! I'm @%s. Lets play!", b.User.Username), &gotgbot.SendMessageOpts{})
 	if err != nil {
 		return fmt.Errorf("failed to send start message: %w", err)
 	}
